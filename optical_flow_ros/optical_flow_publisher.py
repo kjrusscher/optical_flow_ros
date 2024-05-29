@@ -27,8 +27,12 @@ from geometry_msgs.msg import PoseWithCovariance, TwistWithCovariance, Pose, Twi
 from pmw3901 import PMW3901, PAA5100, BG_CS_FRONT_BCM, BG_CS_BACK_BCM
 
 # hard-coded values for PAA5100 and PMW3901 (to be verified for PMW3901)
+SENSOR = "PWM3901"
 FOV_DEG = 42.0
-RES_PIX = 35
+if SENSOR == "PAA5100":
+    RES_PIX = 35
+elif SENSOR == "PWM3901":
+    RES_PIX = 30
 
 class OpticalFlowPublisher(Node):
     def __init__(self, node_name='optical_flow'):
