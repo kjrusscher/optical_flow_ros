@@ -82,7 +82,7 @@ class OpticalFlowPublisher(Node):
             except (RuntimeError, AttributeError):
                 dx, dy = 0.0, 0.0
 
-            fov = np.radians(FOV_DEV)
+            fov = np.radians(FOV_DEG)
             cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
 
             dist_x, dist_y = 0.0, 0.0
