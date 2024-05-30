@@ -133,9 +133,13 @@ class OpticalFlowPublisher(Node):
 
         if SensorClass is not None:
             spi_slots = {'front': BG_CS_FRONT_BCM, 'back': BG_CS_BACK_BCM}
-            self._sensor = SensorClass(spi_port=self.get_parameter('spi_nr').value, 
-                                        spi_cs_gpio=spi_slots.get(self.get_parameter('spi_slot').value))
-            self._sensor.set_rotation(self.get_parameter('rotation').value)
+            
+            try:
+                self._sensor = SensorClass(spi_port=spi_nr, spi_cs_gpio=spi_cs_gpio)
+                self._sensor.set_rotation(self.get_parameter('rotation').value)
+            except Exception as e:
+                self.get_logger().error(f'Failed to initialize sensor: {e}')
+                return TransitionCallbackReturn.FAILURE
 
             if self._sensor is not None:
                 self._odom_pub = self.create_lifecycle_publisher(Odometry, 'odom', qos_profile=qos_profile_sensor_data)
