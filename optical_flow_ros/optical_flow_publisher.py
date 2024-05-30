@@ -54,7 +54,7 @@ class OpticalFlowPublisher(Node):
                 ('child_frame', 'base_link'),
                 ('x_init', 0.0),
                 ('y_init', 0.0),
-                ('z_height', 0.025),
+                ('z_height', 0.8),
                 ('board', 'pmw3901'),
                 ('scaler', 5),
                 ('spi_nr', 0),
@@ -75,7 +75,7 @@ class OpticalFlowPublisher(Node):
 
     def publish_odom(self):
         if self._odom_pub is not None and self._odom_pub.is_activated:
-            self.pos_z = self._laser_range_finder.range / 1000.0
+            pos_z = self._laser_range_finder.range / 1000.0
             
             try:
                 dx, dy = self._sensor.get_motion(timeout=self.get_parameter('sensor_timeout').value)
@@ -83,9 +83,9 @@ class OpticalFlowPublisher(Node):
                 dx, dy = 0.0, 0.0
 
             fov = np.radians(FOV_DEG)
-            cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
+            # cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
+            cf = self.pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
 
-            dist_x, dist_y = 0.0, 0.0
             if self.get_parameter('board').value == 'paa5100':
                 # Convert data from sensor frame to ROS frame for PAA5100
                 # ROS frame: front/back = +x/-x, left/right = +y/-y
@@ -96,6 +96,8 @@ class OpticalFlowPublisher(Node):
                 # ROS and Sensor frames are assumed to align for PMW3901 based on https://docs.px4.io/main/en/sensor/pmw3901.html#mounting-orientation
                 dist_x = cf*dx
                 dist_y = cf*dy
+            else:
+                dist_x, dist_y = 0.0, 0.0
             
             self._pos_x += dist_x
             self._pos_y += dist_y
