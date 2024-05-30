@@ -16,6 +16,7 @@ import sys
 import rclpy
 import numpy as np
 from typing import Optional
+
 from rclpy.lifecycle import Node, Publisher, State, TransitionCallbackReturn
 from rclpy.timer import Timer
 from rclpy.executors import ExternalShutdownException
@@ -24,15 +25,15 @@ from tf2_ros import TransformBroadcaster
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovariance, TwistWithCovariance, Pose, Twist, Point, Quaternion, Vector3, TransformStamped, Transform
+
+import adafruit_vl53l0x
+from adafruit_extended_bus import ExtendedI2C as I2C
 from pmw3901 import PMW3901, PAA5100, BG_CS_FRONT_BCM, BG_CS_BACK_BCM
 
 # hard-coded values for PAA5100 and PMW3901 (to be verified for PMW3901)
 SENSOR = "PWM3901"
-FOV_DEG = 42.0
-if SENSOR == "PAA5100":
-    RES_PIX = 35
-elif SENSOR == "PWM3901":
-    RES_PIX = 30
+RES_PIX = 35
+
 
 class OpticalFlowPublisher(Node):
     def __init__(self, node_name='optical_flow'):
@@ -40,6 +41,7 @@ class OpticalFlowPublisher(Node):
         self._odom_pub: Optional[Publisher] = None
         self._tf_broadcaster: Optional[TransformBroadcaster] = None
         self._timer: Optional[Timer] = None
+        self._laser_range_finder: Optional[adafruit_vl53l0x.VL53L0X] = None
 
         # declare parameters and default values
         self.declare_parameters(
@@ -72,6 +74,8 @@ class OpticalFlowPublisher(Node):
 
     def publish_odom(self):
         if self._odom_pub is not None and self._odom_pub.is_activated:
+            self.pos_z = self._laser_range_finder.range / 1000.0
+            
             try:
                 dx, dy = self._sensor.get_motion(timeout=self.get_parameter('sensor_timeout').value)
             except (RuntimeError, AttributeError):
@@ -121,6 +125,9 @@ class OpticalFlowPublisher(Node):
                 self._tf_broadcaster.sendTransform(tf_msg)
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
+        i2c = I2C(3)
+        self._laser_range_finder = adafruit_vl53l0x.VL53L0X(i2c)
+        
         sensor_classes = {'pwm3901': PMW3901, 'paa5100': PAA5100}
         SensorClass = sensor_classes.get(self.get_parameter('board').value)
 
