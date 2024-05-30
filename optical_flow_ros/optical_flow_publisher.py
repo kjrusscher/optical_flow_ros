@@ -135,11 +135,9 @@ class OpticalFlowPublisher(Node):
         SensorClass = sensor_classes.get(self.get_parameter('board').value)
 
         if SensorClass is not None:
-            spi_slots = {'front': BG_CS_FRONT_BCM, 'back': BG_CS_BACK_BCM}
-            
             try:
                 self._sensor = SensorClass(spi_port=self.get_parameter('spi_nr').value, 
-                                           spi_cs_gpio=spi_slots.get(self.get_parameter('spi_slot').value))
+                                           spi_cs=BG_CS_FRONT_BCM if self.get_parameter('spi_slot').get_parameter_value().string_value == "front" else BG_CS_BACK_BCM)
                 self._sensor.set_rotation(self.get_parameter('rotation').value)
             except Exception as e:
                 self.get_logger().error(f'Failed to initialize sensor: {e}')
