@@ -57,6 +57,7 @@ class OpticalFlowPublisher(Node):
                 ('z_height', 0.8),
                 ('board', 'pmw3901'),
                 ('scaler', 5),
+                ('pmw3901_scaler', 0.375),
                 ('spi_nr', 0),
                 ('spi_slot', 'front'),
                 ('rotation', 90),
@@ -68,6 +69,7 @@ class OpticalFlowPublisher(Node):
         self._pos_y = self.get_parameter('y_init').value
         self._pos_z = self.get_parameter('z_height').value
         self._scaler = self.get_parameter('scaler').value
+        self._pmw3901_scaler = self.get_parameter('pmw3901_scaler').value
         self._dt = self.get_parameter('timer_period').value
         self._sensor = None
         
@@ -84,7 +86,7 @@ class OpticalFlowPublisher(Node):
 
             fov = np.radians(FOV_DEG)
             # cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
-            cf = pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
+            cf = pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler) * (0.3/0.8)
 
             if self.get_parameter('board').value == 'paa5100':
                 # Convert data from sensor frame to ROS frame for PAA5100
@@ -94,8 +96,8 @@ class OpticalFlowPublisher(Node):
                 dist_y = cf*dx
             elif self.get_parameter('board').value == 'pmw3901':
                 # ROS and Sensor frames are assumed to align for PMW3901 based on https://docs.px4.io/main/en/sensor/pmw3901.html#mounting-orientation
-                dist_x = cf*dx
-                dist_y = cf*dy
+                dist_x = self._pmw3901_scaler*cf*dx
+                dist_y = self._pmw3901_scaler*cf*dy
             else:
                 dist_x, dist_y = 0.0, 0.0
             
@@ -109,7 +111,7 @@ class OpticalFlowPublisher(Node):
                 ),
                 child_frame_id = self.get_parameter('child_frame').value,
                 pose = PoseWithCovariance(
-                    pose = Pose(position = Point(x=self._pos_x, y=self._pos_y, z=self._pos_z))
+                    pose = Pose(position = Point(x=self._pos_x, y=self._pos_y, z=pos_z))
                 ),
                 twist = TwistWithCovariance(
                     twist = Twist(linear = Vector3(x=dist_x/self._dt, y=dist_y/self._dt, z=0.0))
