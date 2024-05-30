@@ -84,7 +84,7 @@ class OpticalFlowPublisher(Node):
 
             fov = np.radians(FOV_DEG)
             # cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
-            cf = self.pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
+            cf = pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
 
             if self.get_parameter('board').value == 'paa5100':
                 # Convert data from sensor frame to ROS frame for PAA5100
