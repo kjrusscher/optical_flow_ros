@@ -35,6 +35,9 @@ from pmw3901 import PMW3901, PAA5100, BG_CS_FRONT_BCM, BG_CS_BACK_BCM
 FOV_DEG = 42.0
 RES_PIX = 35
 
+# Smoothing factor for the low-pass filter for pmw3901 output
+alpha = 0.9
+
 
 class OpticalFlowPublisher(Node):
     def __init__(self, node_name='optical_flow'):
@@ -66,7 +69,9 @@ class OpticalFlowPublisher(Node):
         )
         
         self._pos_x = self.get_parameter('x_init').value
+        self._filtered_dx = self.get_parameter('x_init').value
         self._pos_y = self.get_parameter('y_init').value
+        self._filtered_dy = self.get_parameter('y_init').value
         self._pos_z = self.get_parameter('z_height').value
         self._scaler = self.get_parameter('scaler').value
         self._pmw3901_scaler = self.get_parameter('pmw3901_scaler').value
@@ -86,7 +91,7 @@ class OpticalFlowPublisher(Node):
 
             fov = np.radians(FOV_DEG)
             # cf = self._pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
-            cf = pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler) * (0.3/0.8)
+            cf = pos_z*2*np.tan(fov/2)/(RES_PIX*self._scaler)
 
             if self.get_parameter('board').value == 'paa5100':
                 # Convert data from sensor frame to ROS frame for PAA5100
@@ -94,15 +99,26 @@ class OpticalFlowPublisher(Node):
                 # Sensor frame: front/back = -y/+y, left/right = +x/-x
                 dist_x = -1*cf*dy
                 dist_y = cf*dx
+                
+                self._pos_x += dist_x
+                self._pos_y += dist_y
             elif self.get_parameter('board').value == 'pmw3901':
                 # ROS and Sensor frames are assumed to align for PMW3901 based on https://docs.px4.io/main/en/sensor/pmw3901.html#mounting-orientation
                 dist_x = self._pmw3901_scaler*cf*dx
                 dist_y = self._pmw3901_scaler*cf*dy
+
+                self._filtered_dx = alpha * dist_x + (1-alpha) * self._filtered_dx
+                self._filtered_dy = alpha * dist_y + (1-alpha) * self._filtered_dy
+                
+                self._pos_x += self._filtered_dx
+                self._pos_y += self._filtered_dy
             else:
                 dist_x, dist_y = 0.0, 0.0
+                self._pos_x += dist_x
+                self._pos_y += dist_y
             
-            self._pos_x += dist_x
-            self._pos_y += dist_y
+            # self._pos_x += dist_x
+            # self._pos_y += dist_y
 
             odom_msg = Odometry(
                 header = Header(
