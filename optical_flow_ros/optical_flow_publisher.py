@@ -58,7 +58,7 @@ class OpticalFlowPublisher(Node):
                 ('scaler', 5),
                 ('spi_nr', 0),
                 ('spi_slot', 'front'),
-                ('rotation', 0),
+                ('rotation', 90),
                 ('publish_tf', True),
             ]
         )
