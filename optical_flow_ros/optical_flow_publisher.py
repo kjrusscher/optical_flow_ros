@@ -31,7 +31,7 @@ from adafruit_extended_bus import ExtendedI2C as I2C
 from pmw3901 import PMW3901, PAA5100, BG_CS_FRONT_BCM, BG_CS_BACK_BCM
 
 # hard-coded values for PAA5100 and PMW3901 (to be verified for PMW3901)
-SENSOR = "PWM3901"
+FOV_DEG = 42.0
 RES_PIX = 35
 
 
@@ -54,7 +54,7 @@ class OpticalFlowPublisher(Node):
                 ('x_init', 0.0),
                 ('y_init', 0.0),
                 ('z_height', 0.025),
-                ('board', 'paa5100'),
+                ('board', 'pmw3901'),
                 ('scaler', 5),
                 ('spi_nr', 0),
                 ('spi_slot', 'front'),
@@ -128,7 +128,7 @@ class OpticalFlowPublisher(Node):
         i2c = I2C(3)
         self._laser_range_finder = adafruit_vl53l0x.VL53L0X(i2c)
         
-        sensor_classes = {'pwm3901': PMW3901, 'paa5100': PAA5100}
+        sensor_classes = {'pmw3901': PMW3901, 'paa5100': PAA5100}
         SensorClass = sensor_classes.get(self.get_parameter('board').value)
 
         if SensorClass is not None:
