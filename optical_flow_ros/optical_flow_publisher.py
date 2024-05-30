@@ -36,7 +36,7 @@ RES_PIX = 35
 
 
 class OpticalFlowPublisher(Node):
-    def __init__(self, node_name='optical_flow_ros'):
+    def __init__(self, node_name='optical_flow'):
         super().__init__(node_name)
         self._odom_pub: Optional[Publisher] = None
         self._tf_broadcaster: Optional[TransformBroadcaster] = None
@@ -135,7 +135,8 @@ class OpticalFlowPublisher(Node):
             spi_slots = {'front': BG_CS_FRONT_BCM, 'back': BG_CS_BACK_BCM}
             
             try:
-                self._sensor = SensorClass(spi_port=spi_nr, spi_cs_gpio=spi_cs_gpio)
+                self._sensor = SensorClass(spi_port=self.get_parameter('spi_nr').value, 
+                                           spi_cs_gpio=spi_slots.get(self.get_parameter('spi_slot').value))
                 self._sensor.set_rotation(self.get_parameter('rotation').value)
             except Exception as e:
                 self.get_logger().error(f'Failed to initialize sensor: {e}')
