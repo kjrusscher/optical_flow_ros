@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import sys
-import rclpy
+import warnings
 import numpy as np
 from typing import Optional
 
+import rclpy
 from rclpy.lifecycle import Node, Publisher, State, TransitionCallbackReturn
 from rclpy.timer import Timer
 from rclpy.executors import ExternalShutdownException
@@ -125,6 +126,8 @@ class OpticalFlowPublisher(Node):
                 self._tf_broadcaster.sendTransform(tf_msg)
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
+        warnings.filterwarnings("ignore", message="I2C frequency is not settable in python, ignoring!", category=RuntimeWarning)
+        print("Supressing warning \"I2C frequency is not settable in python, ignoring!\"")
         i2c = I2C(3)
         self._laser_range_finder = adafruit_vl53l0x.VL53L0X(i2c)
         
