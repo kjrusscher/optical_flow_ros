@@ -60,7 +60,7 @@ class OpticalFlowPublisher(Node):
                 ('z_height', 0.8),
                 ('board', 'pmw3901'),
                 ('scaler', 5),
-                ('pmw3901_scaler', 0.375),
+                ('pmw3901_scaler', 0.45),
                 ('spi_nr', 0),
                 ('spi_slot', 'front'),
                 ('rotation', 90),
