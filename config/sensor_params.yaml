@@ -13,4 +13,4 @@ optical_flow:
         spi_nr: 0
         spi_slot: front # [front, back]
         rotation: 90 # [0, 90, 180, 270]
-        publish_tf: true
+        publish_tf: false
