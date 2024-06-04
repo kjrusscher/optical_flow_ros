@@ -3,7 +3,7 @@ optical_flow:
         timer_period: 0.01 # min 0.01
         sensor_timeout: 0.5
         parent_frame: odom
-        child_frame: base_link
+        child_frame: pmw3901_frame
         x_init: 0.0
         y_init: 0.0
         z_height: 0.025
